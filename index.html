@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои рецепты</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><b>Мои</b> рецепты</a>
+  <nav><a class="upload" href="upload.html">+ Загрузить рецепт</a></nav>
+</header>
+<main class="wrap">
+  <div class="hero">
+    <h1>Все рецепты <span class="mark">в одном месте</span></h1>
+    <p>Бисквиты, начинки, кремы и декор — открыла и готовишь.</p>
+  </div>
+  <div class="search"><input id="q" type="search" placeholder="Найти рецепт или ингредиент…" autocomplete="off"></div>
+  <div class="tags" id="tags"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>Такого пока нет. Загрузи PDF — и рецепт появится здесь.</div>
+</main>
+<script>
+let recipes = [];
+let activeTag = '';
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+fetch('data/recipes.json').then(r => r.json()).then(d => { recipes = d; renderTags(); render(); });
+
+function allText(r) {
+  return [r.title, ...(r.tags||[]), ...(r.sections||[]).flatMap(s => [
+    s.name, ...(s.ingredients||[]).map(i => i.name || i)
+  ])].join(' ').toLowerCase();
+}
+
+function renderTags() {
+  const t = [...new Set(recipes.flatMap(r => r.tags || []))];
+  document.getElementById('tags').innerHTML =
+    `<button class="${activeTag===''?'on':''}" data-t="">Все</button>` +
+    t.map(x => `<button class="${activeTag===x?'on':''}" data-t="${esc(x)}">${esc(x)}</button>`).join('');
+  document.querySelectorAll('#tags button').forEach(b =>
+    b.onclick = () => { activeTag = b.dataset.t; renderTags(); render(); });
+}
+
+function render() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const list = recipes.filter(r =>
+    (!activeTag || (r.tags||[]).includes(activeTag)) &&
+    (!q || allText(r).includes(q)));
+  document.getElementById('grid').innerHTML = list.map(r => `
+    <a class="rcard" href="recipe.html?id=${encodeURIComponent(r.id)}">
+      ${(r.tags||[]).slice(0,2).map(t => `<span class="badge">${esc(t)}</span>`).join('')}
+      <h3>${esc(r.title)}</h3>
+      <div class="parts">${(r.sections||[]).map(s => esc(s.name)).join(' · ')}</div>
+    </a>`).join('');
+  document.getElementById('empty').hidden = list.length > 0;
+}
+document.getElementById('q').addEventListener('input', render);
+</script>
+</body>
+</html>

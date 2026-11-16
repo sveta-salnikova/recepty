@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Загрузить рецепт — Мои рецепты</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><b>Мои</b> рецепты</a>
+  <nav><a class="upload" href="upload.html">+ Загрузить рецепт</a></nav>
+</header>
+<main class="wrap">
+  <a class="back" href="index.html">← Все рецепты</a>
+  <div class="upl">
+    <div class="panel">
+      <h2>Загрузить рецепт</h2>
+      <p>PDF с рецептом — я разберу его и красиво выложу на сайт: тесто, начинки, крем, декор.</p>
+      <div class="tokrow">
+        <label for="token">Ключ GitHub (нужен один раз, сохранится в этом браузере)</label>
+        <input id="token" type="password" placeholder="ghp_… или github_pat_…" autocomplete="off">
+      </div>
+      <div class="drop" id="drop">Перетащи PDF сюда или нажми, чтобы выбрать</div>
+      <input id="file" type="file" accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png" hidden>
+      <button class="btn" id="go" disabled>Загрузить</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+</main>
+<script src="upload.js"></script>
+</body>
+</html>

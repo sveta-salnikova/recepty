@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рецепт — Мои рецепты</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><b>Мои</b> рецепты</a>
+  <nav><a class="upload" href="upload.html">+ Загрузить рецепт</a></nav>
+</header>
+<main class="wrap" id="app">
+  <a class="back" href="index.html">← Все рецепты</a>
+  <div id="recipe"><div class="empty">Загружаю…</div></div>
+</main>
+<script>
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const id = new URLSearchParams(location.search).get('id');
+let cur = 0, recipe = null;
+
+const ckKey = r => 'ck-' + r.id;
+const loadCk = r => new Set(JSON.parse(localStorage.getItem(ckKey(r)) || '[]'));
+const saveCk = (r, s) => localStorage.setItem(ckKey(r), JSON.stringify([...s]));
+
+fetch('data/recipes.json').then(r => r.json()).then(list => {
+  recipe = list.find(x => x.id === id) || list[0];
+  if (!recipe) { document.getElementById('recipe').innerHTML = '<div class="empty">Рецепт не найден</div>'; return; }
+  document.title = recipe.title + ' — Мои рецепты';
+  render();
+});
+
+function render() {
+  const s = recipe.sections[cur];
+  const ck = loadCk(recipe);
+  document.getElementById('recipe').innerHTML = `
+    <h1 class="rtitle">${esc(recipe.title)}</h1>
+    <div class="rtags">${(recipe.tags||[]).map(t => `<span>${esc(t)}</span>`).join('')}</div>
+    <div class="sectabs">${recipe.sections.map((x,i) =>
+      `<button class="${i===cur?'on':''}" data-i="${i}">${esc(x.name)}</button>`).join('')}</div>
+    <div class="sectwo">
+      <div class="panel">
+        <h4><span class="n">Список</span> Ингредиенты</h4>
+        <ul class="inglist">${(s.ingredients||[]).map((it,i) => {
+          const it2 = typeof it === 'string' ? {name:it} : it;
+          const key = cur + '-' + i;
+          return `<li class="${ck.has(key)?'done':''}" data-k="${key}">
+            <span class="box"></span><span>${esc(it2.name)}</span>
+            ${it2.amt ? `<span class="amt">${esc(it2.amt)}</span>` : ''}</li>`;
+        }).join('')}</ul>
+      </div>
+      <div class="panel">
+        <h4><span class="n">Как</span> Приготовление</h4>
+        <ol class="steps">${(s.steps||[]).map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+        ${s.hint ? `<div class="hint"><b>Совет.</b> ${esc(s.hint)}</div>` : ''}
+      </div>
+    </div>`;
+  document.querySelectorAll('.sectabs button').forEach(b =>
+    b.onclick = () => { cur = +b.dataset.i; render(); });
+  document.querySelectorAll('.inglist li').forEach(li =>
+    li.onclick = () => {
+      const set = loadCk(recipe);
+      set.has(li.dataset.k) ? set.delete(li.dataset.k) : set.add(li.dataset.k);
+      saveCk(recipe, set); li.classList.toggle('done');
+    });
+}
+</script>
+</body>
+</html>
